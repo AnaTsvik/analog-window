@@ -66,10 +66,19 @@
         </div>
         <div class="months" id="months"></div>
       </div>
+
+      <div class="card hidden" id="plan-timeline"></div>
     </section>
 
     <!-- Ranking / detail -->
     <aside class="panel side">
+      <div class="tabs">
+        <button class="tab on" data-view="twins">Top twins</button>
+        <button class="tab" data-view="plan">Rehearsal plan</button>
+      </div>
+
+      <section class="card hidden" id="plan"></section>
+
       <section class="card" id="ranking">
         <h2 class="label">Top twins</h2>
         <ol class="rank-list" id="rank-list"></ol>

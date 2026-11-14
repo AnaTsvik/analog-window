@@ -38,18 +38,67 @@ const TARGETS = {
   }
 };
 
+// Rough region names for grid points: [latMin, latMax, lonMin, lonMax, name]
+const REGIONS = [
+  [-90, -60, -180, 180, "Antarctica"],
+  [59, 84, -74, -10, "Greenland"],
+  [-30, -14, -72, -63, "Altiplano / Puna (Andes)"],
+  [-40, -30, -72, -66, "Central Andes"],
+  [-56, -40, -76, -63, "Patagonia"],
+  [27, 37, 78, 104, "Tibetan Plateau"],
+  [34, 40, 66, 78, "Pamir & Hindu Kush"],
+  [36, 42, 75, 90, "Taklamakan / Tarim Basin"],
+  [38, 50, 90, 120, "Gobi / Mongolia"],
+  [25, 38, 44, 66, "Iranian Plateau"],
+  [12, 32, 35, 60, "Arabian Peninsula"],
+  [15, 34, -17, 35, "Sahara"],
+  [5, 15, 34, 45, "Ethiopian Highlands"],
+  [-30, -15, 11, 26, "Namib / Kalahari"],
+  [-35, -15, 115, 145, "Australian Outback"],
+  [30, 42, -120, -103, "US Southwest"],
+  [15, 30, -118, -98, "Northern Mexico"],
+  [55, 72, -170, -125, "Alaska & Yukon"],
+  [60, 84, -125, -74, "Arctic Canada"],
+  [40, 55, 50, 90, "Central Asian steppe"],
+  [50, 78, 60, 180, "Siberia"]
+];
+
+function regionOf(lat, lon) {
+  const r = REGIONS.find(([a, b, c, d]) => lat >= a && lat <= b && lon >= c && lon <= d);
+  return r ? r[4] : null;
+}
+
 const state = {
   target: "mars",
   preset: "Balanced",
   weights: {},
   month: -1,
   hideAntarctica: true,
-  selected: null
+  selected: null,
+  view: "twins"
+};
+
+const PHASES = {
+  mars: [
+    { name: "Landing & navigation",   w: { clear_sky: 3, dryness: 2, wind_dust: 1, temp_swing: 1 } },
+    { name: "Mobility & robotics",    w: { dryness: 3, temp_swing: 2, wind_dust: 2, cold: 1, thin_air: 1 } },
+    { name: "Construction & habitat", w: { cold: 3, temp_swing: 3, wind_dust: 2, thin_air: 2, dryness: 1 } },
+    { name: "Resources (ice)",        w: { cold_min: 3, cold: 2, dryness: 1, thin_air: 1 } },
+    { name: "Life detection",         w: { dryness: 4, uv: 3, thin_air: 1, cold: 1 } },
+    { name: "Human operations",       w: { thin_air: 3, cold: 2, uv: 2, temp_swing: 1, dryness: 1 } }
+  ],
+  moon: [
+    { name: "Landing & navigation",   w: { low_light: 3, clear_sky: 2, dryness: 1 } },
+    { name: "Mobility & robotics",    w: { low_light: 3, cold_min: 2, dryness: 2, temp_swing: 1 } },
+    { name: "Construction & habitat", w: { cold_min: 3, temp_swing: 2, low_light: 2, dryness: 1 } },
+    { name: "Resources (ice)",        w: { cold_min: 4, cold: 2, low_light: 2 } },
+    { name: "Human operations",       w: { cold_min: 2, low_light: 2, thin_air: 2, uv: 1 } }
+  ]
 };
 
 let points = [];
 let sites = [];
-let map, layer;
+let map, layer, planLayer;
 
 // ---------- data ----------
 
@@ -66,15 +115,15 @@ async function loadData() {
     pt.label = pt.kind === "known" ? pt.name
       : pt.site ? pt.site.name
       : pt.kind === "fine" ? pt.name
-      : "Grid point";
+      : regionOf(pt.lat, pt.lon) || "Grid point";
   });
 }
 
 // ---------- scoring ----------
 
-function monthScore(pt, m) {
+function monthScore(pt, m, weights = state.weights) {
   let num = 0, den = 0;
-  for (const [f, w] of Object.entries(state.weights)) {
+  for (const [f, w] of Object.entries(weights)) {
     if (!w) continue;
     const v = pt.f[f] ? pt.f[f][m] : null;
     if (v === null || v === undefined) continue;
@@ -148,6 +197,7 @@ function initMap() {
 
   map.getPane("tilePane").style.filter = "brightness(0.55) saturate(0.7)";
   layer = L.layerGroup().addTo(map);
+  planLayer = L.layerGroup().addTo(map);
 }
 
 function drawMap() {
@@ -381,6 +431,7 @@ function showDetail(pt, fly = true) {
     <p class="limits">${TARGETS[state.target].note} No place on Earth reproduces low gravity, vacuum, thin Martian air or space radiation.</p>`;
 
   document.getElementById("ranking").classList.add("hidden");
+  document.getElementById("plan").classList.add("hidden");
   box.classList.remove("hidden");
   document.getElementById("back").onclick = closeDetail;
 }
@@ -388,7 +439,97 @@ function showDetail(pt, fly = true) {
 function closeDetail() {
   state.selected = null;
   document.getElementById("detail").classList.add("hidden");
-  document.getElementById("ranking").classList.remove("hidden");
+  document.getElementById("ranking").classList.toggle("hidden", state.view !== "twins");
+  document.getElementById("plan").classList.toggle("hidden", state.view !== "plan");
+}
+
+
+// ---------- rehearsal plan ----------
+
+function placeName(p) {
+  return p.label === "Grid point" ? coord(p.lat, p.lon) : p.label;
+}
+
+function computePlan() {
+  const pool = points.filter(p => !isHidden(p));
+  const usedMonths = new Set();
+  const stops = [];
+
+  PHASES[state.target].forEach(phase => {
+    let best = null;
+    for (const p of pool) {
+      if (stops.some(s => Math.hypot(s.pt.lat - p.lat, s.pt.lon - p.lon) < 4)) continue;
+      for (let m = 0; m < 12; m++) {
+        if (usedMonths.has(m)) continue;
+        const v = monthScore(p, m, phase.w);
+        if (v !== null && (!best || v > best.v)) best = { pt: p, m, v };
+      }
+    }
+    if (!best) return;
+    usedMonths.add(best.m);
+    const why = Object.entries(phase.w)
+      .map(([f, w]) => [f, (best.pt.f[f] ? best.pt.f[f][best.m] : 0) * w])
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 2)
+      .map(([f]) => FACTORS[f].toLowerCase());
+    stops.push({ phase: phase.name, why, ...best });
+  });
+
+  return stops.sort((a, b) => a.m - b.m);
+}
+
+function renderPlan() {
+  const stops = computePlan();
+  const box = document.getElementById("plan");
+  box.innerHTML = `
+    <h2 class="label">12-month rehearsal plan</h2>
+    <p class="plan-intro">Each mission phase gets the Earth place and the month where it behaves most like
+      <b>${TARGETS[state.target].label}</b>. Stops are spread across the year, so one team can rehearse the whole mission.</p>
+    ${stops.map((s, i) => `
+      <div class="stop" data-i="${i}">
+        <span class="stop-n">${i + 1}</span>
+        <div>
+          <div class="stop-month">${MONTHS[s.m].toUpperCase()}</div>
+          <div class="stop-phase">${s.phase}</div>
+          <div class="stop-place">${placeName(s.pt)}</div>
+          <div class="stop-why">STRONG ON: ${s.why.join(" · ").toUpperCase()}</div>
+        </div>
+        <span class="stop-score">${pct(s.v)}</span>
+      </div>`).join("")}`;
+  box.querySelectorAll(".stop").forEach(el =>
+    (el.onclick = () => showDetail(stops[+el.dataset.i].pt)));
+
+  const tl = document.getElementById("plan-timeline");
+  tl.innerHTML = `
+    <div class="row-between"><h2 class="label">Rehearsal calendar</h2>
+    <span class="mono accent">${stops.length} PHASES · ${TARGETS[state.target].label.toUpperCase()}</span></div>
+    <div class="timeline">${MONTHS.map((name, m) => {
+      const s = stops.find(x => x.m === m);
+      const i = stops.indexOf(s);
+      return `<div class="tl-col ${s ? "has" : ""}"><div class="tl-m">${name.toUpperCase()}</div>
+        ${s ? `<div class="tl-chip" data-i="${i}"><b>${i + 1}</b>${s.phase}</div>` : ""}</div>`;
+    }).join("")}</div>`;
+  tl.querySelectorAll(".tl-chip").forEach(el =>
+    (el.onclick = () => showDetail(stops[+el.dataset.i].pt)));
+
+  planLayer.clearLayers();
+  L.polyline(stops.map(s => [s.pt.lat, s.pt.lon]), {
+    color: "#F28C3A", weight: 2, dashArray: "6 6", opacity: 0.9
+  }).addTo(planLayer);
+  stops.forEach((s, i) => {
+    L.marker([s.pt.lat, s.pt.lon], {
+      icon: L.divIcon({ className: "", html: `<div class="num-marker">${i + 1}</div>`, iconSize: [26, 26], iconAnchor: [13, 13] })
+    }).bindTooltip(`${MONTHS[s.m]} · ${s.phase}<br>${placeName(s.pt)}`)
+      .on("click", () => showDetail(s.pt))
+      .addTo(planLayer);
+  });
+}
+
+function setView(view) {
+  state.view = view;
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.view === view));
+  closeDetail();
+  update();
 }
 
 // ---------- main ----------
@@ -398,6 +539,10 @@ function update() {
   scoreAll();
   drawMap();
   renderRanking();
+  const planMode = state.view === "plan";
+  document.getElementById("plan-timeline").classList.toggle("hidden", !planMode);
+  if (planMode) renderPlan();
+  else planLayer.clearLayers();
   if (state.selected) showDetail(state.selected, false);
 }
 
@@ -406,6 +551,7 @@ async function start() {
   renderTargets();
   renderMonths();
 
+  document.querySelectorAll(".tab").forEach(t => (t.onclick = () => setView(t.dataset.view)));
   document.getElementById("hide-antarctica").onchange = e => {
     state.hideAntarctica = e.target.checked;
     update();

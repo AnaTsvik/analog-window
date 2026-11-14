@@ -254,6 +254,58 @@ html, body {
 .method-inner h3 { font: 500 11px "JetBrains Mono", monospace; letter-spacing: .16em; text-transform: uppercase; color: var(--orange); margin-top: 22px; }
 .close { position: absolute; right: 16px; top: 12px; background: none; border: 0; color: var(--muted); font-size: 26px; cursor: pointer; }
 
+/* Tabs */
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 4px; }
+.tab {
+  min-height: 38px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font: 500 11px "JetBrains Mono", monospace;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.tab.on { background: #141D38; color: var(--text); box-shadow: inset 0 -2px 0 var(--orange); }
+
+/* Rehearsal plan */
+.plan-intro { color: #B9C2DA; font-size: 12.5px; line-height: 1.5; margin: 8px 0 4px; }
+.stop { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.stop:hover { background: #0E1730; }
+.stop-n {
+  flex: none;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--orange);
+  color: var(--bg);
+  font: 600 12px "JetBrains Mono", monospace;
+  display: flex; align-items: center; justify-content: center;
+}
+.stop-month { font: 500 10px "JetBrains Mono", monospace; letter-spacing: .14em; color: var(--orange); }
+.stop-phase { font-weight: 600; font-size: 13.5px; margin-top: 2px; }
+.stop-place { font-size: 12.5px; color: #D3D9E8; margin-top: 2px; }
+.stop-why { font: 400 10.5px "JetBrains Mono", monospace; color: var(--muted); margin-top: 4px; letter-spacing: .04em; }
+.stop-score { margin-left: auto; font-weight: 300; font-size: 18px; }
+
+.timeline { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; margin-top: 12px; }
+.tl-col { min-height: 92px; border-top: 2px solid var(--line); padding-top: 6px; }
+.tl-col.has { border-top-color: var(--orange); }
+.tl-m { font: 500 10px "JetBrains Mono", monospace; color: var(--dim); letter-spacing: .1em; }
+.tl-chip { margin-top: 6px; background: #141D38; border: 1px solid var(--line); border-radius: 4px; padding: 6px; font-size: 11px; line-height: 1.3; cursor: pointer; }
+.tl-chip b { display: block; color: var(--orange); font: 600 10px "JetBrains Mono", monospace; margin-bottom: 2px; }
+
+.num-marker {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--orange);
+  color: var(--bg);
+  border: 2px solid var(--bg);
+  font: 600 12px "JetBrains Mono", monospace;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 2px var(--orange);
+}
+
 /* Smaller screens */
 @media (max-width: 1150px) {
   .layout { grid-template-columns: 1fr; }
