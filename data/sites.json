@@ -1,0 +1,79 @@
+[
+  {
+    "id": "puna-salt-plateau",
+    "name": "High Puna salt plateau",
+    "place": "Chile–Argentina border, Andes",
+    "lat": -23.0, "lon": -67.0,
+    "status": "candidate",
+    "surface": "Red-brown and grey bare rock and gravel high plateau with white salt flats (Salar de Tara, Salar de Pujsa, Salar de Quisquiro) and small lakes (Laguna Blanca, Laguna de Vilama).",
+    "special": "Volcanoes all around (Cerro Zapaleri, Nevado de San Pedro, Cerro Purípica). Very dry, no green plants. Only the small town of Susques nearby.",
+    "testHere": ["Rover mobility on gravel and volcanic rock", "Life-detection instruments in salt flats", "Solar power under very strong UV"],
+    "notValid": ["Lagoons hold living microbes and birds", "Air pressure is far higher than on Mars", "Earth gravity"]
+  },
+  {
+    "id": "salar-de-arizaro",
+    "name": "Salar de Arizaro",
+    "place": "Salta, Argentina",
+    "lat": -25.0, "lon": -68.0,
+    "status": "candidate",
+    "surface": "Red-brown and grey bare rock and gravel high plateau with a huge white salt flat in the middle and smaller salt patches to the west, one with a small turquoise lake.",
+    "special": "Volcanoes and mountains all around (Volcán Llullaillaco, Cerro Archibarca, Cerro Tebenquicho). Very dry, no green plants, no towns nearby.",
+    "testHere": ["Landing and navigation on wide, flat salt surfaces", "Drilling into salt deposits", "Long-distance rover traverses far from people"],
+    "notValid": ["Salt crust is wetter than Martian soil", "Air pressure is far higher than on Mars", "Earth gravity"]
+  },
+  {
+    "id": "xungba-plateau",
+    "name": "Xungba plateau",
+    "place": "Western Tibet, China",
+    "lat": 32.0, "lon": 82.0,
+    "status": "candidate",
+    "surface": "Light brown and grey rocky mountains with folded ridges, small turquoise and green lakes, white dry salt lakes and one big dark blue lake.",
+    "special": "High, dry plateau with almost no plants. A small settlement, Xungba, in the middle.",
+    "testHere": ["Navigation across ridges and valleys", "Studying dry salt lakes as ancient-lake analogs", "Cold-night battery and thermal tests"],
+    "notValid": ["Big lakes still hold liquid water", "Some vegetation and grazing", "Earth gravity"]
+  },
+  {
+    "id": "sangsang",
+    "name": "Sangsang highlands",
+    "place": "Southern Tibet, China",
+    "lat": 29.0, "lon": 87.0,
+    "status": "candidate",
+    "surface": "Brown and dark grey rocky mountains with many ridges and valleys, snow on some peaks, a small dark green lake and a pale dry lake.",
+    "special": "Very dry with almost no plants. Two small towns, Sangsang and Quxar.",
+    "testHere": ["Rover mobility on steep, rocky terrain", "Team operations with nearby logistics", "Cold-season equipment tests"],
+    "notValid": ["Snow cover in winter", "Towns and roads nearby", "Earth gravity"]
+  },
+  {
+    "id": "xijir-ulan-hu",
+    "name": "Xijir Ulan Hu basin",
+    "place": "Hoh Xil, northern Tibet, China",
+    "lat": 35.0, "lon": 90.0,
+    "status": "candidate",
+    "surface": "Red-brown and grey hills with large pale grey-blue lakes (Xijir Ulan Hu, probably salty or frozen), snow on a few peaks and pale dry riverbeds.",
+    "special": "Very dry, no plants, no towns or roads nearby. One of the most remote places in Asia.",
+    "testHere": ["Ice and frozen-lake drilling", "Remote operations with no outside help", "Studying dry riverbeds like Martian channels"],
+    "notValid": ["Lakes are liquid in summer", "Air pressure is far higher than on Mars", "Earth gravity"]
+  },
+  {
+    "id": "qaidam-mahai",
+    "name": "Qaidam Basin floor near Mahai",
+    "place": "Qinghai, China",
+    "lat": 38.0, "lon": 94.0,
+    "status": "benchmark-region",
+    "surface": "Flat light brown and beige desert plain of sand and gravel, brown-grey mountains, small green-blue salt ponds and a dark green lake.",
+    "special": "Very dry. A few small towns (like Mahai) and roads, so it is easy to reach.",
+    "testHere": ["Salt and sediment studies like the lake beds of Jezero and Gale", "Easy-access rover tests close to roads", "Wind and dust erosion studies"],
+    "notValid": ["Lower altitude, so warmer and thicker air than the other sites", "Salt ponds are man-made in places", "Earth gravity"]
+  },
+  {
+    "id": "lake-sarez",
+    "name": "Lake Sarez",
+    "place": "Pamir mountains, Tajikistan",
+    "lat": 38.0, "lon": 73.0,
+    "status": "candidate",
+    "surface": "Dark brown and grey high mountains with snow and ice on the peaks, a long narrow turquoise lake (Lake Sarez) and a small blue-green lake.",
+    "special": "Lake Sarez formed when a huge landslide blocked a river in 1911. No towns or roads.",
+    "testHere": ["Studying landslide-dammed lakes and slope collapse", "Mobility on steep, unstable slopes", "Operations in very remote terrain"],
+    "notValid": ["A deep lake of liquid water", "Snow and glaciers", "Earth gravity"]
+  }
+]

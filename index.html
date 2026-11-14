@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Analog Window — where and when Earth becomes Mars or the Moon</title>
+  <meta name="description" content="Find where and when places on Earth behave most like Mars or the Moon, using NASA open data. NASA Space Apps Challenge 2026, team AnaLog.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-bar"></span>
+      <span class="brand-name">Ana<b>Log</b></span>
+      <span class="brand-sub">Analog Window</span>
+    </div>
+    <nav class="nav">
+      <a href="#" class="active">Atlas</a>
+      <a href="#method" id="open-method">Method</a>
+    </nav>
+    <div class="status mono" id="status">Loading NASA data…</div>
+  </header>
+
+  <main class="layout">
+    <!-- Controls -->
+    <aside class="panel controls">
+      <section class="card">
+        <h2 class="label">Target</h2>
+        <div class="stack" id="targets"></div>
+      </section>
+
+      <section class="card">
+        <h2 class="label">Mission profile</h2>
+        <div class="chips" id="presets"></div>
+        <h2 class="label spaced">What matters</h2>
+        <div id="sliders"></div>
+      </section>
+
+      <section class="card">
+        <label class="toggle">
+          <input type="checkbox" id="hide-antarctica" checked>
+          <span>Hide Antarctica <em>(already well studied)</em></span>
+        </label>
+      </section>
+    </aside>
+
+    <!-- Map + months -->
+    <section class="center">
+      <div class="map-wrap">
+        <div id="map"></div>
+        <div class="legend mono">
+          <span><i class="dot hot"></i>Strong twin</span>
+          <span><i class="dot cool"></i>Weak twin</span>
+          <span><i class="dot site"></i>Candidate site</span>
+          <span><i class="dot bench"></i>Known analog</span>
+        </div>
+      </div>
+
+      <div class="card months-card">
+        <div class="row-between">
+          <h2 class="label">Month</h2>
+          <span class="mono accent" id="month-label">Best month for each place</span>
+        </div>
+        <div class="months" id="months"></div>
+      </div>
+    </section>
+
+    <!-- Ranking / detail -->
+    <aside class="panel side">
+      <section class="card" id="ranking">
+        <h2 class="label">Top twins</h2>
+        <ol class="rank-list" id="rank-list"></ol>
+        <h2 class="label spaced">Known analogs (benchmarks)</h2>
+        <ul class="bench-list" id="bench-list"></ul>
+      </section>
+
+      <section class="card hidden" id="detail"></section>
+    </aside>
+  </main>
+
+  <section class="method hidden" id="method">
+    <div class="method-inner card">
+      <button class="close" id="close-method" aria-label="Close">×</button>
+      <h2>Method</h2>
+      <p>For every point we take 20-year monthly averages (2001–2020) from NASA POWER: temperature, rain, humidity, air pressure, UV, cloud cover, sunlight and wind.</p>
+      <p>No place on Earth reaches Mars or Moon values, so each factor scores how far a place goes <b>in the target's direction compared with the rest of Earth's land</b> (a percentile from 0 to 1). A place drier than 98% of land scores 0.98 for dryness.</p>
+      <p>The twin score is the weighted average of the factors. Weights come from the mission profile and can be changed with the sliders. Every place gets a score for every month, which gives its best test window.</p>
+      <p>We search systematically: 1,287 land points on a 4° global grid, then a 1° grid around the strongest regions. Eight well-known analog sites are scored the same way as benchmarks.</p>
+      <h3>Earth's limits</h3>
+      <p>No place on Earth reproduces low gravity, the lunar vacuum, the thin Martian atmosphere or their radiation. Every site lists what it is not valid for.</p>
+      <h3>Data</h3>
+      <ul>
+        <li>NASA POWER Climatology API (MERRA-2, CERES)</li>
+        <li>NASA Worldview satellite imagery for the surface check of each site</li>
+        <li>NASA GIBS map tiles</li>
+      </ul>
+    </div>
+  </section>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
