@@ -15,7 +15,7 @@ const FACTORS = {
 const TARGETS = {
   mars: {
     label: "Mars · Jezero & Gale craters",
-    note: "Mars: about 0.6 kPa air pressure, no rain, around −60 °C on average.",
+    note: "Mars: about 0.64 kPa air pressure (less than 1% of Earth's), no rain, about −59 °C on average (NASA Mars Fact Sheet).",
     presets: {
       "Balanced":               { dryness: 3, cold: 2, thin_air: 1.5, uv: 1, temp_swing: 1, clear_sky: 1, wind_dust: 0.5 },
       "Mobility & robotics":    { dryness: 3, temp_swing: 2, wind_dust: 2, cold: 1, thin_air: 1, clear_sky: 1 },
@@ -27,7 +27,7 @@ const TARGETS = {
   },
   moon: {
     label: "Moon · South pole (Artemis)",
-    note: "Moon's south pole: no atmosphere, low sun, shadowed craters colder than −230 °C (LRO Diviner).",
+    note: "Moon's south pole: no atmosphere, a low sun, and shadowed crater floors down to about −250 °C (LRO Diviner).",
     presets: {
       "Balanced":               { cold_min: 3, low_light: 2, dryness: 2, thin_air: 1, clear_sky: 1 },
       "Mobility & robotics":    { low_light: 3, cold_min: 2, dryness: 2, temp_swing: 1 },

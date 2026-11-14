@@ -100,11 +100,26 @@
       <p>We search systematically: 1,287 land points on a 4° global grid, then a 1° grid around the strongest regions. Eight well-known analog sites are scored the same way as benchmarks.</p>
       <h3>Earth's limits</h3>
       <p>No place on Earth reproduces low gravity, the lunar vacuum, the thin Martian atmosphere or their radiation. Every site lists what it is not valid for.</p>
-      <h3>Data</h3>
+      <h3>Target reference values</h3>
       <ul>
-        <li>NASA POWER Climatology API (MERRA-2, CERES)</li>
-        <li>NASA Worldview satellite imagery for the surface check of each site</li>
-        <li>NASA GIBS map tiles</li>
+        <li><b>Mars:</b> surface pressure about 6.36 mbar (0.64 kPa, less than 1% of Earth's), average temperature about −59 °C, daily range −89 to −31 °C at the Viking 1 site. <a href="https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html" target="_blank" rel="noopener">NASA Mars Fact Sheet</a></li>
+        <li><b>Moon, south pole:</b> no atmosphere; permanently shadowed crater floors reach about −250 °C (25 K), the coldest temperature measured in the solar system. <a href="https://science.nasa.gov/wp-content/uploads/2024/01/lrolitho7temperaturevariation27may2014.pdf" target="_blank" rel="noopener">NASA LRO: Temperature Variation on the Moon</a></li>
+      </ul>
+      <p>These values are far outside anything on Earth, which is why the app scores direction and rank instead of matching numbers.</p>
+      <h3>Data and sources</h3>
+      <ul>
+        <li><a href="https://power.larc.nasa.gov/" target="_blank" rel="noopener">NASA POWER</a> Climatology API, 20-year monthly averages 2001–2020 (MERRA-2, CERES)</li>
+        <li><a href="https://worldview.earthdata.nasa.gov/" target="_blank" rel="noopener">NASA Worldview</a> satellite imagery for the surface check of each candidate site</li>
+        <li><a href="https://gibs.earthdata.nasa.gov/" target="_blank" rel="noopener">NASA GIBS</a> Blue Marble map tiles</li>
+        <li><a href="https://pds-geosciences.wustl.edu/missions/lro/diviner.htm" target="_blank" rel="noopener">LRO Diviner</a> polar products (NASA PDS) for the Moon reference</li>
+        <li><a href="https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html" target="_blank" rel="noopener">NASA Mars Fact Sheet</a> for the Mars reference</li>
+        <li>Map library: <a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a></li>
+      </ul>
+      <h3>Limitations</h3>
+      <ul>
+        <li>Climate data is averaged over grid cells about 0.5–1° wide, so local conditions (a single crater floor) can differ.</li>
+        <li>Geology and terrain are not scored automatically; they come from the Worldview surface check.</li>
+        <li>Scores are relative to Earth's land, not absolute similarity to Mars or the Moon.</li>
       </ul>
     </div>
   </section>
