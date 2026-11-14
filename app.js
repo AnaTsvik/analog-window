@@ -190,13 +190,13 @@ const css = name => getComputedStyle(document.documentElement).getPropertyValue(
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   document.getElementById("theme-label").textContent = theme === "light" ? "Dark" : "Light";
-  try { localStorage.setItem("aw-theme", theme); } catch (e) {}
+  try { localStorage.setItem("aw-mode", theme); } catch (e) {}
 }
 
 function initTheme() {
   let saved = null;
-  try { saved = localStorage.getItem("aw-theme"); } catch (e) {}
-  applyTheme(saved || "light");
+  try { saved = localStorage.getItem("aw-mode"); } catch (e) {}
+  applyTheme(saved || "dark");
   document.getElementById("theme-btn").onclick = () => {
     applyTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light");
     update();
@@ -206,8 +206,9 @@ function initTheme() {
 // ---------- map ----------
 
 function initMap() {
-  map = L.map("map", { worldCopyJump: true, minZoom: 2, maxZoom: 8, preferCanvas: true, zoomControl: false })
-    .setView([20, 10], 2);
+  const small = window.innerWidth < 700;
+  map = L.map("map", { worldCopyJump: true, minZoom: 1, maxZoom: 8, preferCanvas: true, zoomControl: false })
+    .setView([15, 10], small ? 1 : 2);
   L.control.zoom({ position: "topright" }).addTo(map);
   map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
 
@@ -372,7 +373,7 @@ function renderRanking() {
       <span class="rank-n">${String(i + 1).padStart(2, "0")}</span>
       <span class="rank-main">
         <span class="rank-name">${p.label === "Grid point" ? coord(p.lat, p.lon) : p.label}</span>
-        <span class="rank-meta ${p.site ? "site" : ""}">${p.site ? "CANDIDATE SITE" : coord(p.lat, p.lon)} · BEST ${bestWindow(p).toUpperCase()}</span>
+        <span class="rank-meta ${p.site ? "site" : ""}">${p.site ? (p.site.status === "benchmark-region" ? "KNOWN ANALOG REGION" : "CANDIDATE SITE") : coord(p.lat, p.lon)} · BEST ${bestWindow(p).toUpperCase()}</span>
       </span>
       <span class="rank-score">${pct(p.value)}</span>`;
     li.onclick = () => showDetail(p);
@@ -407,6 +408,7 @@ function showDetail(pt, fly = true) {
   const raw = k => (pt.raw[k] ? pt.raw[k][m] : null);
   const fmt = (v, unit) => (v === null || v === undefined ? "–" : `${v}${unit}`);
   const tag = pt.kind === "known" ? `<span class="tag bench">KNOWN ANALOG · BENCHMARK</span>`
+    : pt.site && pt.site.status === "benchmark-region" ? `<span class="tag bench">KNOWN ANALOG REGION · CHECKED IN WORLDVIEW</span>`
     : pt.site ? `<span class="tag">NEW CANDIDATE SITE</span>`
     : `<span class="tag">GRID POINT</span>`;
 
@@ -702,7 +704,7 @@ function placeSpot() {
   spot.style.height = r.height + pad * 2 + "px";
 
   const card = document.getElementById("tour-card");
-  const w = 320, h = card.offsetHeight, gap = 20;
+  const w = card.offsetWidth, h = card.offsetHeight, gap = 20;
   let left, top;
   if (r.right + pad + gap + w < window.innerWidth) { left = r.right + pad + gap; top = r.top - pad; }
   else if (r.left - pad - gap - w > 0) { left = r.left - pad - gap - w; top = r.top - pad; }
@@ -807,8 +809,11 @@ async function start() {
     e.preventDefault();
     document.getElementById("method").classList.remove("hidden");
   };
-  document.getElementById("close-method").onclick = () =>
-    document.getElementById("method").classList.add("hidden");
+  const method = document.getElementById("method");
+  const closeMethod = () => method.classList.add("hidden");
+  document.getElementById("close-method").onclick = closeMethod;
+  method.onclick = e => { if (e.target === method) closeMethod(); };
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeMethod(); });
 
   try {
     await loadData();

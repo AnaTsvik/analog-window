@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
   <header class="topbar">
@@ -107,8 +107,10 @@
 
   <section class="method hidden" id="method">
     <div class="method-inner card">
-      <button class="close" id="close-method" aria-label="Close">×</button>
-      <h2>Method</h2>
+      <div class="method-head">
+        <h2>Method</h2>
+        <button class="close" id="close-method" aria-label="Close">×</button>
+      </div>
       <p>For every point we take 20-year monthly averages (2001–2020) from NASA POWER: temperature, rain, humidity, air pressure, UV, cloud cover, sunlight and wind.</p>
       <p>No place on Earth reaches Mars or Moon values, so each factor scores how far a place goes <b>in the target's direction compared with the rest of Earth's land</b> (a percentile from 0 to 1). A place drier than 98% of land scores 0.98 for dryness.</p>
       <p>The twin score is the weighted average of the factors. Weights come from the mission profile and can be changed with the sliders. Every place gets a score for every month, which gives its best test window.</p>
@@ -144,7 +146,7 @@
       <span class="welcome-product mono">Analog Window</span>
       <span class="welcome-kicker mono">by AnaLog · NASA Space Apps Challenge 2026</span>
       <h1 aria-label="Your next Mars or Moon mission starts on Earth.">
-        <span aria-hidden="true">Your next <span class="mm">M<span class="m-word"><span>ars</span><span>oon</span></span></span> mission<br>starts on Earth.</span>
+        <span aria-hidden="true">Your next <span class="mm">M<span class="m-word"><span>ars</span><span>oon</span></span></span> mission <br>starts on Earth.</span>
       </h1>
       <div class="welcome-pattern">
         <div><span class="wp-k mono">Where</span><span class="wp-t">Places on Earth that match Mars or the Moon</span></div>
@@ -190,6 +192,6 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

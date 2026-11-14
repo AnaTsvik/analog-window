@@ -421,11 +421,36 @@ a:hover { opacity: .8; }
   justify-content: center;
   padding: 24px;
 }
-.method-inner { position: relative; max-width: 700px; max-height: 86vh; overflow: auto; padding: 32px; line-height: 1.65; color: var(--text-2); }
+.method-inner { --pad: 32px; position: relative; max-width: 700px; max-height: 86vh; max-height: 86dvh; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 0 32px 32px; line-height: 1.65; color: var(--text-2); }
 .method-inner h2 { margin-top: 0; font-weight: 600; font-size: 26px; letter-spacing: -.01em; color: var(--text); }
 .method-inner h3 { font: 500 11px "IBM Plex Mono", monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-top: 26px; }
 .method-inner li { margin-bottom: 6px; }
-.close { position: absolute; right: 18px; top: 14px; background: var(--hover); border: 0; border-radius: 8px; width: 32px; height: 32px; color: var(--text-2); font-size: 20px; cursor: pointer; }
+.method-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 calc(-1 * var(--pad)) 6px;
+  padding: 18px var(--pad) 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+.method-head h2 { margin: 0; }
+.close {
+  flex: none;
+  width: 40px; height: 40px;
+  background: var(--hover);
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 22px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+[data-theme="dark"] .close { background: #1f1f1f; }
 
 /* Map title */
 .map-title {
@@ -452,12 +477,12 @@ a:hover { opacity: .8; }
   backdrop-filter: blur(14px) saturate(1.1);
   -webkit-backdrop-filter: blur(14px) saturate(1.1);
   display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 32px;
-  overflow: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
-.welcome-inner { max-width: 920px; width: 100%; text-align: center; }
+.welcome-inner { max-width: 920px; width: 100%; text-align: center; margin: auto; }
 .welcome-kicker { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 .welcome h1 { margin: 18px 0 16px; font-size: clamp(34px, 5vw, 60px); line-height: 1.05; font-weight: 600; letter-spacing: -.025em; }
 .welcome-product {
@@ -641,6 +666,7 @@ a:hover { opacity: .8; }
 @media (max-width: 800px) {
   .welcome-options { grid-template-columns: 1fr; }
 }
+
 @media (max-width: 1150px) {
   #help-btn span { display: none; }
   .layout { grid-template-columns: 1fr; padding: 16px; }
@@ -648,3 +674,54 @@ a:hover { opacity: .8; }
   .topbar { padding: 0 16px; }
   .brand-sub, .status { display: none; }
 }
+
+/* Phones */
+@media (max-width: 700px) {
+  .topbar { height: auto; min-height: 56px; padding: 10px 12px; gap: 8px; }
+  .brand-name { font-size: 17px; }
+  .nav { gap: 2px; }
+  .nav a { padding: 7px 9px; font-size: 13px; }
+  .top-right { gap: 6px; }
+  .theme-btn { height: 32px; padding: 0 9px; }
+  #theme-label { display: none; }
+
+  .layout { padding: 12px; gap: 12px; }
+  .card { padding: 14px; }
+
+  .map-wrap { height: 380px; }
+  .map-title { font-size: 12px; padding: 6px 10px; left: 10px; top: 10px; right: 58px; }
+  .legend { left: 8px; right: 8px; bottom: 8px; gap: 6px 12px; padding: 7px 10px; font-size: 10px; }
+
+  .months { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .month-btn { height: 34px; font-size: 12px; padding: 0; }
+
+  .timeline { grid-template-columns: 1fr; gap: 0; }
+  .tl-col { min-height: 0; display: flex; align-items: center; gap: 12px; border-top: 0; border-left: 2px solid var(--line); padding: 6px 0 6px 12px; }
+  .tl-col:not(.has) { display: none; }
+  .tl-col.has { border-left-color: var(--accent); box-shadow: none; }
+  .tl-m { width: 34px; flex: none; }
+  .tl-chip { margin: 0; flex: 1; }
+  .tl-chip b { display: inline; margin: 0 6px 0 0; }
+
+  .welcome { padding: 20px 16px; }
+  .welcome h1 { font-size: 34px; margin: 14px 0 14px; }
+  .welcome h1 br { display: none; }
+  .welcome-kicker { font-size: 10px; }
+  .welcome-pattern { gap: 8px; margin-top: 0; }
+  .welcome-pattern > div { flex-direction: row; align-items: baseline; gap: 10px; padding: 0; text-align: left; }
+  .wp-k { width: 72px; flex: none; text-align: right; font-size: 10px; }
+  .wp-t { font-size: 14px; }
+  .welcome-ask { margin: 22px 0 10px; }
+  .welcome-options { gap: 10px; }
+  .welcome-opt { padding: 14px 60px 14px 16px; gap: 3px; }
+  .opt-t { font-size: 16px; }
+  .opt-d { font-size: 12.5px; }
+  .welcome-skip { margin-top: 14px; }
+
+  .method { padding: 10px; align-items: stretch; }
+  .method-inner { --pad: 20px; padding: 0 20px 20px; width: 100%; max-height: none; height: 100%; }
+  .tour-card { width: calc(100vw - 28px); }
+}
+
+html:has(.welcome:not(.hidden)), html:has(.method:not(.hidden)),
+html:has(.welcome:not(.hidden)) body, html:has(.method:not(.hidden)) body { overflow: hidden; }
