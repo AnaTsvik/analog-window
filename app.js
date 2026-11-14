@@ -511,7 +511,7 @@ function computePlan() {
       .map(([f, w]) => [f, (best.pt.f[f] ? best.pt.f[f][best.m] : 0) * w])
       .sort((a, b) => b[1] - a[1])
       .slice(0, 2)
-      .map(([f]) => FACTORS[f].toLowerCase());
+      .map(([f]) => FACTORS[f].replace(/^[A-Z][a-z]/, s => s.toLowerCase()));
     stops.push({ phase: phase.name, why, ...best });
   });
 
@@ -525,7 +525,10 @@ function renderPlan() {
   const box = document.getElementById("plan");
   box.innerHTML = `
     <div class="row-between"><h2 class="label">Field test plan</h2>
-      ${edited ? `<button class="mini-btn" id="plan-reset">Reset plan</button>` : ""}</div>
+      <span class="plan-tools">
+        ${edited ? `<button class="mini-btn" id="plan-reset">Reset plan</button>` : ""}
+        <button class="mini-btn accent-btn" id="plan-pdf">Download PDF</button>
+      </span></div>
     <p class="plan-intro">Before a mission, teams test each part of it on Earth, in places that behave like
       <b>${TARGETS[state.target].label}</b>. This plan picks the best place and month for every part,
       one per month, so one team could test the whole mission in a year.</p>
@@ -559,6 +562,7 @@ function renderPlan() {
     if (b.dataset.act === "restore") state.skipPhases.delete(b.dataset.name);
     update();
   }));
+  document.getElementById("plan-pdf").onclick = () => printBrief(stops);
   const reset = document.getElementById("plan-reset");
   if (reset) reset.onclick = () => { state.skipPhases.clear(); state.blocked.clear(); update(); };
 
@@ -596,6 +600,50 @@ function setView(view) {
 }
 
 
+
+// ---------- printable brief ----------
+
+function printBrief(stops) {
+  const t = TARGETS[state.target];
+  const date = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  const mission = state.preset || "Custom weights";
+  const rows = stops.map((s, i) => {
+    const site = s.pt.site;
+    const raw = k => (s.pt.raw[k] ? s.pt.raw[k][s.m] : null);
+    return `
+      <tr>
+        <td class="b-n">${i + 1}</td>
+        <td><b>${MONTHS[s.m]}</b></td>
+        <td><b>${s.phase}</b><div class="b-sub">Strong on ${s.why.join(" and ")}</div></td>
+        <td>${placeName(s.pt)}<div class="b-sub">${coord(s.pt.lat, s.pt.lon)} · ${Math.round(s.pt.elev)} m</div></td>
+        <td class="b-num">${pct(s.v)}</td>
+        <td class="b-sub">${raw("T2M") ?? "–"} °C avg · ${raw("T2M_MIN") ?? "–"} °C night · ${raw("PRECTOTCORR") ?? "–"} mm/day rain · UV ${raw("ALLSKY_SFC_UV_INDEX") ?? "–"}</td>
+      </tr>
+      ${site ? `<tr class="b-site"><td></td><td colspan="5">
+        <b>Test here:</b> ${site.testHere.join("; ")}.<br>
+        <b>Not valid for:</b> ${site.notValid.join("; ")}.</td></tr>` : ""}`;
+  }).join("");
+
+  document.getElementById("brief").innerHTML = `
+    <div class="b-head">
+      <div><div class="b-brand">Analog Window</div><div class="b-sub">by AnaLog · NASA Space Apps Challenge 2026</div></div>
+      <div class="b-sub b-right">Generated ${date}<br>anatsvik.github.io/analog-window</div>
+    </div>
+    <h1>Field test plan: ${t.label}</h1>
+    <p class="b-lead">Where and when on Earth to test each part of a ${t.label} mission. Mission profile: <b>${mission}</b>.
+      Each phase gets the place and month on Earth whose conditions match ${t.label} best, one per month.</p>
+    <table>
+      <thead><tr><th>#</th><th>Month</th><th>Phase</th><th>Place</th><th>Match</th><th>Conditions that month (NASA POWER)</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <h2>Limits</h2>
+    <p>${t.note} No place on Earth reproduces low gravity, vacuum, thin Martian air or space radiation. Scores compare each place with the rest of Earth's land, not with absolute ${t.label} values.</p>
+    <h2>Data</h2>
+    <p>NASA POWER Climatology API, monthly averages 2001–2020. Site surfaces checked in NASA Worldview imagery. Full method: anatsvik.github.io/analog-window → Method.</p>`;
+
+  window.print();
+}
+
 // ---------- welcome and tour ----------
 
 const STEP = {
@@ -622,7 +670,7 @@ const STEP = {
   planStop: { el: "#plan-stops .stop", view: "plan", title: "Read a stop",
     text: "When (month), what to test (phase), where (place), how good the match is (%) and why. Click a stop to open the site profile." },
   planEdit: { el: "#plan-stops .stop-actions", view: "plan", title: "Change the plan",
-    text: "'Other place' swaps in the next best place, for example if one is hard to reach. 'Skip this phase' removes a part your mission doesn't need. 'Reset plan' undoes all changes." },
+    text: "'Other place' swaps in the next best place, for example if one is hard to reach. 'Skip this phase' removes a part your mission doesn't need. 'Reset plan' undoes all changes, and 'Download PDF' saves the plan as a one-page brief to share." },
   route: { el: ".map-wrap", view: "plan", title: "The route",
     text: "Numbered markers and a dashed line show the stops on the map in calendar order." },
   calendar: { el: "#plan-timeline", view: "plan", title: "The year at a glance",

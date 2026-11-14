@@ -11,7 +11,8 @@ Analog Window searches the whole planet for places that behave like Mars or the 
 2. **Twin score.** Each factor (dryness, cold, thin air, UV, day–night swing, clear skies, wind, low sunlight) is scored as a percentile against all of Earth's land, in the target's direction. Mission profiles set the weights, and the sliders change them live.
 3. **Analog window.** Every place gets a score for every month, which gives its best test window.
 4. **Benchmarks.** Eight well-known analog sites are scored the same way to check the method.
-5. **Surface check.** The strongest candidates were inspected in NASA Worldview satellite imagery.
+5. **Field test plan.** One place and month for every mission phase, editable, with a printable one-page PDF brief.
+6. **Surface check.** The strongest candidates were inspected in NASA Worldview satellite imagery.
 
 ## Data
 

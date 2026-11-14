@@ -609,6 +609,34 @@ a:hover { opacity: .8; }
 .skipped { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
 .skipped .label { width: 100%; }
 
+.plan-tools { display: flex; gap: 6px; }
+.accent-btn { border-color: var(--accent); color: var(--accent); }
+.accent-btn:hover { background: var(--accent); color: var(--on-accent); }
+
+/* Printable brief */
+.brief { display: none; }
+@media print {
+  @page { size: A4; margin: 14mm; }
+  html, body { background: #fff !important; color: #111 !important; }
+  body > *:not(.brief) { display: none !important; }
+  .brief { display: block !important; font-family: "Inter Tight", Arial, sans-serif; color: #111; font-size: 10.5pt; }
+  .b-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #111; padding-bottom: 8px; }
+  .b-brand { font-weight: 700; font-size: 14pt; letter-spacing: .02em; }
+  .b-right { text-align: right; }
+  .brief h1 { font-size: 20pt; margin: 16px 0 6px; }
+  .brief h2 { font-size: 11pt; margin: 18px 0 4px; color: #C2410C; text-transform: uppercase; letter-spacing: .06em; }
+  .brief p { margin: 0 0 6px; line-height: 1.5; }
+  .b-lead { color: #333; }
+  .brief table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  .brief th { text-align: left; font-size: 8.5pt; text-transform: uppercase; letter-spacing: .05em; color: #555; border-bottom: 1px solid #999; padding: 6px 6px; }
+  .brief td { padding: 7px 6px; border-bottom: 1px solid #ddd; vertical-align: top; }
+  .b-n { font-weight: 700; color: #C2410C; }
+  .b-num { font-weight: 700; }
+  .b-sub { font-size: 8.5pt; color: #555; margin-top: 2px; }
+  .b-site td { font-size: 9pt; color: #333; background: #f6f5f2; border-bottom: 1px solid #ddd; }
+  tr { page-break-inside: avoid; }
+}
+
 /* Smaller screens */
 @media (max-width: 800px) {
   .welcome-options { grid-template-columns: 1fr; }
