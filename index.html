@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Analog Window — where and when Earth becomes Mars or the Moon</title>
   <meta name="description" content="Find where and when places on Earth behave most like Mars or the Moon, using NASA open data. NASA Space Apps Challenge 2026, team AnaLog.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -21,7 +21,13 @@
       <a href="#" class="active">Atlas</a>
       <a href="#method" id="open-method">Method</a>
     </nav>
-    <div class="status mono" id="status">Loading NASA data…</div>
+    <div class="top-right">
+      <div class="status mono" id="status">Loading NASA data…</div>
+      <button class="theme-btn" id="theme-btn" aria-label="Switch light or dark theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <span id="theme-label">Dark</span>
+      </button>
+    </div>
   </header>
 
   <main class="layout">
@@ -42,7 +48,7 @@
       <section class="card">
         <label class="toggle">
           <input type="checkbox" id="hide-antarctica" checked>
-          <span>Hide Antarctica <em>(already well studied)</em></span>
+          <span>Hide Antarctica<em>Already well studied, so we look elsewhere</em></span>
         </label>
       </section>
     </aside>
@@ -60,10 +66,7 @@
       </div>
 
       <div class="card months-card">
-        <div class="row-between">
-          <h2 class="label">Month</h2>
-          <span class="mono accent" id="month-label">Best month for each place</span>
-        </div>
+        <h2 class="label">Month</h2>
         <div class="months" id="months"></div>
       </div>
 

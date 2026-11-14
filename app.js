@@ -14,7 +14,7 @@ const FACTORS = {
 
 const TARGETS = {
   mars: {
-    label: "Mars · Jezero & Gale craters",
+    label: "Mars",
     note: "Mars: about 0.64 kPa air pressure (less than 1% of Earth's), no rain, about −59 °C on average (NASA Mars Fact Sheet).",
     presets: {
       "Balanced":               { dryness: 3, cold: 2, thin_air: 1.5, uv: 1, temp_swing: 1, clear_sky: 1, wind_dust: 0.5 },
@@ -114,8 +114,7 @@ async function loadData() {
     pt.site = sites.find(st => st.lat === pt.lat && st.lon === pt.lon) || null;
     pt.label = pt.kind === "known" ? pt.name
       : pt.site ? pt.site.name
-      : pt.kind === "fine" ? pt.name
-      : regionOf(pt.lat, pt.lon) || "Grid point";
+      : regionOf(pt.lat, pt.lon) || pt.name || "Grid point";
   });
 }
 
@@ -166,10 +165,38 @@ function coord(lat, lon) {
   return `${a} ${b}`;
 }
 
+function scale(t) {
+  const stops = getComputedStyle(document.documentElement).getPropertyValue("--scale")
+    .split(",").map(s => s.trim().replace("#", ""));
+  const x = Math.max(0, Math.min(1, t)) * (stops.length - 1);
+  const i = Math.min(Math.floor(x), stops.length - 2);
+  return mix(stops[i], stops[i + 1], x - i);
+}
+
 function mix(a, b, t) {
   const pa = a.match(/\w\w/g).map(h => parseInt(h, 16));
   const pb = b.match(/\w\w/g).map(h => parseInt(h, 16));
   return "#" + pa.map((v, i) => Math.round(v + (pb[i] - v) * t).toString(16).padStart(2, "0")).join("");
+}
+
+// ---------- theme ----------
+
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim().replace("#", "");
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  document.getElementById("theme-label").textContent = theme === "light" ? "Dark" : "Light";
+  try { localStorage.setItem("aw-theme", theme); } catch (e) {}
+}
+
+function initTheme() {
+  let saved = null;
+  try { saved = localStorage.getItem("aw-theme"); } catch (e) {}
+  applyTheme(saved || "light");
+  document.getElementById("theme-btn").onclick = () => {
+    applyTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light");
+    update();
+  };
 }
 
 // ---------- map ----------
@@ -195,8 +222,8 @@ function initMap() {
     }
   });
 
-  map.getPane("tilePane").style.filter = "brightness(0.55) saturate(0.7)";
   layer = L.layerGroup().addTo(map);
+  map.on("zoomend", () => { if (points.length) drawMap(); });
   planLayer = L.layerGroup().addTo(map);
 }
 
@@ -209,24 +236,26 @@ function drawMap() {
   sorted.forEach(pt => {
     if (pt.value === null) return;
     const hidden = isHidden(pt);
+    const z = map.getZoom();
+    if (pt.kind === "fine" && !pt.site && z < 4) return;
     const t = Math.pow((pt.value - lo) / (hi - lo || 1), 2);
     let opts;
 
     if (pt.kind === "known") {
-      opts = { radius: 6, color: "#060A18", weight: 1.5, fillColor: "#7FB6D1", fillOpacity: 1 };
+      opts = { radius: 3.5 + z * 0.4, color: "#" + css("--panel"), weight: 1.5, fillColor: "#" + css("--bench"), fillOpacity: 1 };
     } else if (pt.site) {
-      opts = { radius: 8, color: "#F28C3A", weight: 2.5, fillColor: "#060A18", fillOpacity: 0.9 };
+      opts = { radius: 4 + z * 0.6, color: "#" + css("--accent"), weight: 2, fillColor: "#" + css("--panel"), fillOpacity: 1 };
     } else {
       opts = {
-        radius: pt.kind === "fine" ? 2.6 : 3.6,
+        radius: pt.kind === "fine" ? 0.6 + z * 0.5 : 1.2 + z * 0.6,
         stroke: false,
-        fillColor: mix("24345F", "F28C3A", t),
-        fillOpacity: hidden ? 0.08 : 0.35 + 0.6 * t
+        fillColor: scale(t),
+        fillOpacity: hidden ? 0.1 : 0.45 + 0.55 * t
       };
     }
 
     const m = L.circleMarker([pt.lat, pt.lon], opts)
-      .bindTooltip(`${pt.label}<br>${coord(pt.lat, pt.lon)} · ${pct(pt.value)}`)
+      .bindTooltip(`${placeName(pt)}<br>${coord(pt.lat, pt.lon)} · ${pct(pt.value)}`)
       .on("click", () => showDetail(pt));
     m.addTo(layer);
   });
@@ -283,7 +312,10 @@ function renderSliders() {
       <input type="range" min="0" max="5" step="0.5" value="${state.weights[f]}">`;
     const input = row.querySelector("input");
     const out = row.querySelector(".row-between span:last-child");
+    const fill = () => input.style.setProperty("--p", (input.value / 5) * 100 + "%");
+    fill();
     input.oninput = () => {
+      fill();
       state.weights[f] = parseFloat(input.value);
       out.textContent = input.value;
       state.preset = null;
@@ -304,8 +336,6 @@ function renderMonths() {
     b.textContent = name;
     b.onclick = () => {
       state.month = m;
-      document.getElementById("month-label").textContent =
-        m === -1 ? "Best month for each place" : `How each place scores in ${MONTHS[m]}`;
       renderMonths();
       update();
     };
@@ -374,8 +404,8 @@ function showDetail(pt, fly = true) {
 
   const strip = pt.s.map((v, i) => {
     const t = v === null ? 0 : Math.max(0, Math.min(1, (v - 0.4) / 0.5));
-    const bg = mix("16203F", "F28C3A", t);
-    const fg = t > 0.6 ? "#060A18" : "#B9C2DA";
+    const bg = scale(t);
+    const fg = t > 0.6 ? "#" + css("--on-accent") : "#" + css("--muted");
     return `<div style="background:${bg};color:${fg}" title="${MONTHS[i]}: ${pct(v)}">${MONTHS[i][0]}</div>`;
   }).join("");
 
@@ -402,7 +432,7 @@ function showDetail(pt, fly = true) {
   box.innerHTML = `
     <div class="detail-head">
       <div>${tag}</div>
-      <button class="back" id="back">← LIST</button>
+      <button class="back" id="back">← Back</button>
     </div>
     <h3 class="detail-title">${pt.label === "Grid point" ? coord(pt.lat, pt.lon) : pt.label}</h3>
     <div class="detail-place">${pt.site ? pt.site.place + " · " : ""}${coord(pt.lat, pt.lon)} · ${Math.round(pt.elev)} m</div>
@@ -482,9 +512,9 @@ function renderPlan() {
   const stops = computePlan();
   const box = document.getElementById("plan");
   box.innerHTML = `
-    <h2 class="label">12-month rehearsal plan</h2>
+    <h2 class="label">Rehearsal plan</h2>
     <p class="plan-intro">Each mission phase gets the Earth place and the month where it behaves most like
-      <b>${TARGETS[state.target].label}</b>. Stops are spread across the year, so one team can rehearse the whole mission.</p>
+      <b>${TARGETS[state.target].label}</b>, each in a different month, so one team can rehearse the whole mission in a year.</p>
     ${stops.map((s, i) => `
       <div class="stop" data-i="${i}">
         <span class="stop-n">${i + 1}</span>
@@ -492,7 +522,7 @@ function renderPlan() {
           <div class="stop-month">${MONTHS[s.m].toUpperCase()}</div>
           <div class="stop-phase">${s.phase}</div>
           <div class="stop-place">${placeName(s.pt)}</div>
-          <div class="stop-why">STRONG ON: ${s.why.join(" · ").toUpperCase()}</div>
+          <div class="stop-why">Strong on ${s.why.join(" and ")}</div>
         </div>
         <span class="stop-score">${pct(s.v)}</span>
       </div>`).join("")}`;
@@ -502,7 +532,7 @@ function renderPlan() {
   const tl = document.getElementById("plan-timeline");
   tl.innerHTML = `
     <div class="row-between"><h2 class="label">Rehearsal calendar</h2>
-    <span class="mono accent">${stops.length} PHASES · ${TARGETS[state.target].label.toUpperCase()}</span></div>
+    <span class="mono accent">${stops.length} phases · ${TARGETS[state.target].label}</span></div>
     <div class="timeline">${MONTHS.map((name, m) => {
       const s = stops.find(x => x.m === m);
       const i = stops.indexOf(s);
@@ -514,7 +544,7 @@ function renderPlan() {
 
   planLayer.clearLayers();
   L.polyline(stops.map(s => [s.pt.lat, s.pt.lon]), {
-    color: "#F28C3A", weight: 2, dashArray: "6 6", opacity: 0.9
+    color: "#" + css("--accent"), weight: 2, dashArray: "6 6", opacity: 0.9
   }).addTo(planLayer);
   stops.forEach((s, i) => {
     L.marker([s.pt.lat, s.pt.lon], {
@@ -547,6 +577,7 @@ function update() {
 }
 
 async function start() {
+  initTheme();
   initMap();
   renderTargets();
   renderMonths();
