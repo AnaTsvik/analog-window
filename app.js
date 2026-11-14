@@ -15,6 +15,7 @@ const FACTORS = {
 const TARGETS = {
   mars: {
     label: "Mars",
+    title: "Places on Earth most like <span>Mars</span>",
     note: "Mars: about 0.64 kPa air pressure (less than 1% of Earth's), no rain, about −59 °C on average (NASA Mars Fact Sheet).",
     presets: {
       "Balanced":               { dryness: 3, cold: 2, thin_air: 1.5, uv: 1, temp_swing: 1, clear_sky: 1, wind_dust: 0.5 },
@@ -27,6 +28,7 @@ const TARGETS = {
   },
   moon: {
     label: "Moon · South pole (Artemis)",
+    title: "Places on Earth most like the <span>Moon's south pole</span>",
     note: "Moon's south pole: no atmosphere, a low sun, and shadowed crater floors down to about −250 °C (LRO Diviner).",
     presets: {
       "Balanced":               { cold_min: 3, low_light: 2, dryness: 2, thin_air: 1, clear_sky: 1 },
@@ -75,7 +77,9 @@ const state = {
   month: -1,
   hideAntarctica: true,
   selected: null,
-  view: "twins"
+  view: "twins",
+  skipPhases: new Set(),
+  blocked: new Set()
 };
 
 const PHASES = {
@@ -272,6 +276,8 @@ function renderTargets() {
     b.textContent = t.label;
     b.onclick = () => {
       state.target = key;
+      state.skipPhases.clear();
+      state.blocked.clear();
       setPreset("Balanced");
       renderTargets();
     };
@@ -355,6 +361,8 @@ function renderRanking() {
     if (picked.length === 8) break;
   }
 
+  document.getElementById("twins-intro").innerHTML =
+    `Places on Earth ranked by how closely their conditions match <b>${TARGETS[state.target].label}</b>. 100% would be the most ${state.target === "mars" ? "Mars" : "Moon"}-like place on Earth. Click a place to see why.`;
   const list = document.getElementById("rank-list");
   list.innerHTML = "";
   picked.forEach((p, i) => {
@@ -486,8 +494,10 @@ function computePlan() {
   const stops = [];
 
   PHASES[state.target].forEach(phase => {
+    if (state.skipPhases.has(phase.name)) return;
     let best = null;
     for (const p of pool) {
+      if (state.blocked.has(`${phase.name}|${p.lat},${p.lon}`)) continue;
       if (stops.some(s => Math.hypot(s.pt.lat - p.lat, s.pt.lon - p.lon) < 4)) continue;
       for (let m = 0; m < 12; m++) {
         if (usedMonths.has(m)) continue;
@@ -510,28 +520,51 @@ function computePlan() {
 
 function renderPlan() {
   const stops = computePlan();
+  const skipped = PHASES[state.target].filter(p => state.skipPhases.has(p.name));
+  const edited = state.skipPhases.size || state.blocked.size;
   const box = document.getElementById("plan");
   box.innerHTML = `
-    <h2 class="label">Rehearsal plan</h2>
-    <p class="plan-intro">Each mission phase gets the Earth place and the month where it behaves most like
-      <b>${TARGETS[state.target].label}</b>, each in a different month, so one team can rehearse the whole mission in a year.</p>
+    <div class="row-between"><h2 class="label">Field test plan</h2>
+      ${edited ? `<button class="mini-btn" id="plan-reset">Reset plan</button>` : ""}</div>
+    <p class="plan-intro">Before a mission, teams test each part of it on Earth, in places that behave like
+      <b>${TARGETS[state.target].label}</b>. This plan picks the best place and month for every part,
+      one per month, so one team could test the whole mission in a year.</p>
+    <div id="plan-stops">
     ${stops.map((s, i) => `
       <div class="stop" data-i="${i}">
         <span class="stop-n">${i + 1}</span>
-        <div>
+        <div class="stop-body">
           <div class="stop-month">${MONTHS[s.m].toUpperCase()}</div>
           <div class="stop-phase">${s.phase}</div>
           <div class="stop-place">${placeName(s.pt)}</div>
           <div class="stop-why">Strong on ${s.why.join(" and ")}</div>
+          <div class="stop-actions">
+            <button class="mini-btn" data-act="swap" data-i="${i}">Other place</button>
+            <button class="mini-btn" data-act="skip" data-i="${i}">Skip this phase</button>
+          </div>
         </div>
         <span class="stop-score">${pct(s.v)}</span>
-      </div>`).join("")}`;
+      </div>`).join("")}
+    </div>
+    ${skipped.length ? `<div class="skipped"><span class="label">Skipped phases</span>
+      ${skipped.map(p => `<button class="mini-btn" data-act="restore" data-name="${p.name}">+ ${p.name}</button>`).join("")}</div>` : ""}`;
+
   box.querySelectorAll(".stop").forEach(el =>
     (el.onclick = () => showDetail(stops[+el.dataset.i].pt)));
+  box.querySelectorAll("[data-act]").forEach(b => (b.onclick = e => {
+    e.stopPropagation();
+    const s = stops[+b.dataset.i];
+    if (b.dataset.act === "swap") state.blocked.add(`${s.phase}|${s.pt.lat},${s.pt.lon}`);
+    if (b.dataset.act === "skip") state.skipPhases.add(s.phase);
+    if (b.dataset.act === "restore") state.skipPhases.delete(b.dataset.name);
+    update();
+  }));
+  const reset = document.getElementById("plan-reset");
+  if (reset) reset.onclick = () => { state.skipPhases.clear(); state.blocked.clear(); update(); };
 
   const tl = document.getElementById("plan-timeline");
   tl.innerHTML = `
-    <div class="row-between"><h2 class="label">Rehearsal calendar</h2>
+    <div class="row-between"><h2 class="label">Test calendar</h2>
     <span class="mono accent">${stops.length} phases · ${TARGETS[state.target].label}</span></div>
     <div class="timeline">${MONTHS.map((name, m) => {
       const s = stops.find(x => x.m === m);
@@ -562,10 +595,145 @@ function setView(view) {
   update();
 }
 
+
+// ---------- welcome and tour ----------
+
+const STEP = {
+  target: { el: "#targets", title: "Choose what to look for",
+    text: "Mars or the Moon's south pole. You never leave Earth: every place in the app is on Earth, compared with your target." },
+  mission: { el: "#mission-block", title: "Choose the mission type",
+    text: "Rover driving, building a habitat, drilling for ice, searching for life or crew operations. Each one cares about different conditions, so the results change." },
+  sliders: { el: "#sliders-block", title: "Set what matters",
+    text: "Drag a slider to make a condition more or less important. The map, ranking and plan update instantly." },
+  antarctica: { el: "#hide-antarctica", parent: ".card", title: "Antarctica filter",
+    text: "Antarctica is already well studied, so it is hidden by default to bring lesser-known places forward. Untick it to include it." },
+  map: { el: ".map-wrap", view: "twins", title: "Read the map",
+    text: "Each dot is a place on Earth. Brighter means more like your target. Rings are candidate sites we checked in NASA satellite images; solid dots are famous analog sites used as benchmarks. Click any dot for details." },
+  months: { el: ".months-card", title: "Pick a month",
+    text: "Conditions change through the year. 'Best' shows each place in its best month; pick a month to see where to go at that time." },
+  twins: { el: "#ranking", view: "twins", title: "Top twins",
+    text: "The places on Earth that match your target best, with their score and best month. Click any place to open its profile." },
+  detail: { el: "#detail", detail: true, title: "Site profile",
+    text: "Everything about one place: the score for every month, each condition, real NASA measurements, a satellite-image description, what you could test there and what it is not good for." },
+  bench: { el: "#bench-block", view: "twins", title: "Benchmarks",
+    text: "Famous analog sites are scored the same way, to test the method. Dry deserts like the Atacama and Death Valley score well on climate; sites famous for craters or lava (Haughton, Iceland) score low, because the score measures climate, not geology." },
+  planIntro: { el: "#plan", view: "plan", title: "Field test plan",
+    text: "Before a rover or crew goes to Mars, the team tests each part of the mission on Earth first. This plan picks the best place and month for every part of the mission, one per month." },
+  planStop: { el: "#plan-stops .stop", view: "plan", title: "Read a stop",
+    text: "When (month), what to test (phase), where (place), how good the match is (%) and why. Click a stop to open the site profile." },
+  planEdit: { el: "#plan-stops .stop-actions", view: "plan", title: "Change the plan",
+    text: "'Other place' swaps in the next best place, for example if one is hard to reach. 'Skip this phase' removes a part your mission doesn't need. 'Reset plan' undoes all changes." },
+  route: { el: ".map-wrap", view: "plan", title: "The route",
+    text: "Numbered markers and a dashed line show the stops on the map in calendar order." },
+  calendar: { el: "#plan-timeline", view: "plan", title: "The year at a glance",
+    text: "Which part of the mission is tested in which month, so you can plan travel and teams." },
+  method: { el: "#open-method", title: "How the score works",
+    text: "The formula, every NASA data source and the limits. No place on Earth has low gravity, vacuum or Mars's thin air." },
+  settings: { el: ".top-right", title: "Light or dark, and help",
+    text: "Switch between light and dark mode, and open this guide again any time with 'How it works'." }
+};
+
+const TOURS = {
+  plan: ["planIntro", "planStop", "planEdit", "route", "calendar", "map", "mission", "target", "sliders", "months", "twins", "detail", "bench", "antarctica", "method", "settings"],
+  explore: ["map", "twins", "detail", "bench", "mission", "sliders", "months", "target", "antarctica", "planIntro", "planStop", "planEdit", "route", "calendar", "method", "settings"],
+  curious: ["target", "mission", "sliders", "map", "months", "twins", "detail", "bench", "planIntro", "planStop", "planEdit", "route", "calendar", "antarctica", "method", "settings"]
+};
+let TOUR = TOURS.curious.map(k => STEP[k]);
+let tourIndex = 0;
+
+let focusedEl = null;
+
+function placeSpot() {
+  if (!focusedEl) return;
+  const pad = 10;
+  const r = focusedEl.getBoundingClientRect();
+  const spot = document.getElementById("tour-spot");
+  spot.style.left = r.left - pad + "px";
+  spot.style.top = r.top - pad + "px";
+  spot.style.width = r.width + pad * 2 + "px";
+  spot.style.height = r.height + pad * 2 + "px";
+
+  const card = document.getElementById("tour-card");
+  const w = 320, h = card.offsetHeight, gap = 20;
+  let left, top;
+  if (r.right + pad + gap + w < window.innerWidth) { left = r.right + pad + gap; top = r.top - pad; }
+  else if (r.left - pad - gap - w > 0) { left = r.left - pad - gap - w; top = r.top - pad; }
+  else { left = r.left + r.width / 2 - w / 2; top = r.bottom + pad + gap; }
+  top = Math.max(14, Math.min(top, window.innerHeight - h - 14));
+  left = Math.max(14, Math.min(left, window.innerWidth - w - 14));
+  card.style.left = left + "px";
+  card.style.top = top + "px";
+}
+
+function showTourStep() {
+  const step = TOUR[tourIndex];
+  if (step.view && state.view !== step.view) setView(step.view);
+  if (step.detail) {
+    const best = points.filter(p => !isHidden(p) && p.value !== null && p.kind !== "known")
+      .sort((a, b) => b.value - a.value)[0];
+    showDetail(best, false);
+  } else if (state.selected) {
+    closeDetail();
+  }
+  focusedEl = document.querySelector(step.el);
+  if (step.el === "#targets" || step.parent) focusedEl = focusedEl.closest(".card");
+  focusedEl.scrollIntoView({ block: "center", behavior: "smooth" });
+
+  document.getElementById("tour-step").textContent = `STEP ${tourIndex + 1} OF ${TOUR.length}`;
+  document.getElementById("tour-title").textContent = step.title.replace(/^\d+\.\s*/, "");
+  document.getElementById("tour-text").textContent = step.text;
+  document.getElementById("tour-next").textContent = tourIndex === TOUR.length - 1 ? "Finish" : "Next";
+
+  document.getElementById("tour-spot").classList.remove("hidden");
+  document.getElementById("tour-card").classList.remove("hidden");
+  placeSpot();
+  setTimeout(placeSpot, 400);
+}
+
+function endTour() {
+  focusedEl = null;
+  document.getElementById("tour-spot").classList.add("hidden");
+  document.getElementById("tour-card").classList.add("hidden");
+  document.getElementById("welcome").classList.add("hidden");
+}
+
+function startMode(mode) {
+  document.getElementById("welcome").classList.add("hidden");
+  state.target = "mars";
+  renderTargets();
+  if (mode === "plan") {
+    setPreset("Mobility & robotics");
+    setView("plan");
+  } else {
+    setPreset("Balanced");
+    setView("twins");
+  }
+  TOUR = TOURS[mode === "tour" ? "curious" : mode].map(k => STEP[k]);
+  tourIndex = 0;
+  setTimeout(showTourStep, 150);
+}
+
+function initWelcome() {
+  const welcome = document.getElementById("welcome");
+  welcome.querySelectorAll(".welcome-opt").forEach(b => (b.onclick = () => startMode(b.dataset.mode)));
+  document.getElementById("tour-skip").onclick = endTour;
+  document.getElementById("tour-end").onclick = endTour;
+  document.getElementById("tour-next").onclick = () => {
+    if (++tourIndex >= TOUR.length) endTour();
+    else showTourStep();
+  };
+  document.getElementById("help-btn").onclick = () => welcome.classList.remove("hidden");
+  window.addEventListener("resize", placeSpot);
+  window.addEventListener("scroll", placeSpot, { passive: true });
+
+  welcome.classList.remove("hidden");
+}
+
 // ---------- main ----------
 
 function update() {
   if (!points.length) return;
+  document.getElementById("map-title").innerHTML = TARGETS[state.target].title;
   scoreAll();
   drawMap();
   renderRanking();
@@ -597,12 +765,13 @@ async function start() {
   try {
     await loadData();
     document.getElementById("status").textContent =
-      `${points.length.toLocaleString("en")} POINTS · NASA POWER 2001–2020`;
+      `${points.length.toLocaleString("en")} places · NASA climate data 2001–2020`;
   } catch (err) {
     document.getElementById("status").textContent = "Could not load data — open with Live Server";
     return;
   }
   setPreset("Balanced");
+  initWelcome();
 }
 
 start();
