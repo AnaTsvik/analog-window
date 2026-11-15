@@ -430,7 +430,7 @@ function showDetail(pt, fly = true) {
     }).join("");
 
   const site = pt.site ? `
-    <h2 class="label spaced">Surface (NASA Worldview check)</h2>
+    <h2 class="label spaced">Terrain and surface · checked in NASA Worldview</h2>
     <p class="prose">${pt.site.surface}</p>
     <p class="prose">${pt.site.special}</p>
     <div class="lists">
